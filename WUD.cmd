@@ -15,6 +15,10 @@
 :: 设置 UTF-8 代码页以支持中文显示
 chcp 65001 >nul 2>&1
 
+:: 定义空设备变量（用于抑制输出）
+set "nul1=>nul"
+set "nul2=>nul 2>&1"
+
 :: 防止变量污染
 setlocal EnableDelayedExpansion
 
