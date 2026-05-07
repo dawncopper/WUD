@@ -89,3 +89,5 @@ MIT License - 自由使用、修改和分发。
 ## 🙏 致谢
 
 本项目架构参考了 [Microsoft-Activation-Scripts](https://github.com/massgravel/Microsoft-Activation-Scripts) 项目的设计模式。
+## <img width="128" height="128" alt="微信图片_20260508013723_46_2" src="https://github.com/user-attachments/assets/ce8d934e-a3c1-46c2-a87c-b406f824ff4f" />
+扫码关注微信公众号:爱修电脑的童哥
