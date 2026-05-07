@@ -215,90 +215,180 @@ goto MainMenu
 :: ==================== Check Status ====================
 
 :CheckStatus
+set "_cs_score=0"
+set "_cs_total=6"
+set "_cs_fail="
 cls
 echo.
 echo   Current Windows Update Status
-echo   ----------------------------------------------------------------
+echo   ================================================================================
 echo.
 
-echo   [Service Status]
-for /f "tokens=3" %%a in ('sc query wuauserv ^| findstr /i "STATE"') do (
-    if "%%a"=="RUNNING" (
-        echo     Windows Update Service:    [Running]
-    ) else if "%%a"=="STOPPED" (
-        echo     Windows Update Service:    [Stopped]
-    ) else (
-        echo     Windows Update Service:    [%%a]
-    )
-)
-
-for /f "tokens=3" %%a in ('sc query wuauserv ^| findstr /i "START_TYPE" 2^>nul') do (
-    echo     Startup Type:              %%a
-)
-
+echo   [1] SERVICE STATUS
 echo.
-for /f "tokens=3" %%a in ('sc query UsoSvc ^| findstr /i "STATE" 2^>nul') do (
-    if "%%a"=="RUNNING" (
-        echo     UsoSvc Service:          [Running]
-    ) else if "%%a"=="STOPPED" (
-        echo     UsoSvc Service:          [Stopped]
-    ) else (
-        echo     UsoSvc Service:          [%%a]
-    )
-)
 
-echo.
-echo   [Registry Status]
-reg query "HKLM\SYSTEM\CurrentControlSet\Services\wuauserv" /v Start 2>nul | findstr /i "Start" >nul && (
-    for /f "tokens=3" %%a in ('reg query "HKLM\SYSTEM\CurrentControlSet\Services\wuauserv" /v Start 2^>nul ^| findstr /i "Start"') do (
-        if "%%a"=="0x4" (
-            echo     wuauserv\Start:      4 (Disabled)
-        ) else if "%%a"=="0x2" (
-            echo     wuauserv\Start:      2 (Auto)
-        ) else if "%%a"=="0x3" (
-            echo     wuauserv\Start:      3 (Manual)
-        ) else (
-            echo     wuauserv\Start:      %%a
-        )
-    )
-) || echo     wuauserv\Start:      Not Found
+:: Windows Update Service - use PowerShell for reliable output
+for /f "delims=" %%a in ('powershell.exe -nop -c "(Get-Service wuauserv -ErrorAction SilentlyContinue).Status" 2^>nul') do set "_wu_state=%%a"
+for /f "delims=" %%a in ('powershell.exe -nop -c "(Get-Service wuauserv -ErrorAction SilentlyContinue).StartType" 2^>nul') do set "_wu_start=%%a"
+if "!_wu_state!"=="" set "_wu_state=Not Found"
+if "!_wu_start!"=="" set "_wu_start=N/A"
 
-reg query "HKLM\SYSTEM\CurrentControlSet\Services\UsoSvc" /v Start 2>nul | findstr /i "Start" >nul && (
-    for /f "tokens=3" %%a in ('reg query "HKLM\SYSTEM\CurrentControlSet\Services\UsoSvc" /v Start 2^>nul ^| findstr /i "Start"') do (
-        if "%%a"=="0x4" (
-            echo     UsoSvc\Start:        4 (Disabled)
-        ) else if "%%a"=="0x2" (
-            echo     UsoSvc\Start:        2 (Auto)
-        ) else (
-            echo     UsoSvc\Start:        %%a
-        )
-    )
-) || echo     UsoSvc\Start:        Not Found
-
-echo.
-echo   [Group Policy Status]
-reg query "HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" /v NoAutoUpdate 2>nul | findstr /i "NoAutoUpdate" >nul && (
-    for /f "tokens=3" %%a in ('reg query "HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" /v NoAutoUpdate 2^>nul ^| findstr /i "NoAutoUpdate"') do (
-        if "%%a"=="0x1" (
-            echo     Auto Update Policy:    Disabled
-        ) else (
-            echo     Auto Update Policy:    %%a
-        )
-    )
-) || echo     Auto Update Policy:    Not Configured
-
-echo.
-echo   [Task Scheduler Status]
-set "_taskCount=0"
-for /f %%a in ('schtasks /query /tn "Microsoft\Windows\WindowsUpdate\Scheduled Start" 2^>nul ^| findstr /i "Scheduled Start"') do set "_taskCount=1"
-if "%_taskCount%"=="0" (
-    echo     WindowsUpdate Task:    Disabled or Not Found
+if "!_wu_state!"=="Stopped" (
+    echo     Windows Update Service:  STOPPED [OK]
+    set /a "_cs_score+=1"
+) else if "!_wu_state!"=="Running" (
+    echo     Windows Update Service:  RUNNING [FAIL]
+    set "_cs_fail=!_cs_fail!  - wuauserv is running^"
 ) else (
-    echo     WindowsUpdate Task:    May still be active
+    echo     Windows Update Service:  !_wu_state!
+)
+
+if "!_wu_start!"=="Disabled" (
+    echo     Startup Type:            DISABLED [OK]
+    set /a "_cs_score+=1"
+) else if "!_wu_start!"=="Automatic" (
+    echo     Startup Type:            AUTOMATIC [FAIL]
+    set "_cs_fail=!_cs_fail!  - wuauserv startup is Automatic^"
+) else if "!_wu_start!"=="Manual" (
+    echo     Startup Type:            MANUAL [FAIL]
+    set "_cs_fail=!_cs_fail!  - wuauserv startup is Manual^"
+) else (
+    echo     Startup Type:            !_wu_start!
 )
 
 echo.
-echo   ----------------------------------------------------------------
+
+:: UsoSvc Service
+for /f "delims=" %%a in ('powershell.exe -nop -c "(Get-Service UsoSvc -ErrorAction SilentlyContinue).Status" 2^>nul') do set "_uso_state=%%a"
+for /f "delims=" %%a in ('powershell.exe -nop -c "(Get-Service UsoSvc -ErrorAction SilentlyContinue).StartType" 2^>nul') do set "_uso_start=%%a"
+if "!_uso_state!"=="" set "_uso_state=Not Found"
+if "!_uso_start!"=="" set "_uso_start=N/A"
+
+if "!_uso_state!"=="Stopped" (
+    echo     UsoSvc Service:          STOPPED [OK]
+    set /a "_cs_score+=1"
+) else if "!_uso_state!"=="Running" (
+    echo     UsoSvc Service:          RUNNING [FAIL]
+    set "_cs_fail=!_cs_fail!  - UsoSvc is running^"
+) else (
+    echo     UsoSvc Service:          !_uso_state!
+)
+
+if "!_uso_start!"=="Disabled" (
+    echo     Startup Type:            DISABLED [OK]
+    set /a "_cs_score+=1"
+) else if "!_uso_start!"=="Automatic" (
+    echo     Startup Type:            AUTOMATIC [FAIL]
+    set "_cs_fail=!_cs_fail!  - UsoSvc startup is Automatic^"
+) else if "!_uso_start!"=="Manual" (
+    echo     Startup Type:            MANUAL [FAIL]
+    set "_cs_fail=!_cs_fail!  - UsoSvc startup is Manual^"
+) else (
+    echo     Startup Type:            !_uso_start!
+)
+
+echo.
+echo   [2] REGISTRY STATUS
+echo.
+
+:: wuauserv Start
+set "_reg_wu=Unknown"
+reg query "HKLM\SYSTEM\CurrentControlSet\Services\wuauserv" /v Start >nul 2>&1
+if errorlevel 1 (
+    echo     wuauserv\Start:          NOT FOUND [FAIL]
+    set "_cs_fail=!_cs_fail!  - wuauserv registry not found^"
+) else (
+    for /f "tokens=3" %%a in ('reg query "HKLM\SYSTEM\CurrentControlSet\Services\wuauserv" /v Start 2^>nul ^| findstr /i "Start"') do set "_reg_wu=%%a"
+    if "!_reg_wu!"=="0x4" (
+        echo     wuauserv\Start:          DISABLED [OK]
+    ) else if "!_reg_wu!"=="0x2" (
+        echo     wuauserv\Start:          AUTOMATIC [FAIL]
+        set "_cs_fail=!_cs_fail!  - wuauserv\Start is 0x2 (Auto)^"
+    ) else if "!_reg_wu!"=="0x3" (
+        echo     wuauserv\Start:          MANUAL [FAIL]
+        set "_cs_fail=!_cs_fail!  - wuauserv\Start is 0x3 (Manual)^"
+    ) else (
+        echo     wuauserv\Start:          !_reg_wu!
+    )
+)
+
+:: UsoSvc Start
+set "_reg_uso=Unknown"
+reg query "HKLM\SYSTEM\CurrentControlSet\Services\UsoSvc" /v Start >nul 2>&1
+if errorlevel 1 (
+    echo     UsoSvc\Start:            NOT FOUND [FAIL]
+    set "_cs_fail=!_cs_fail!  - UsoSvc registry not found^"
+) else (
+    for /f "tokens=3" %%a in ('reg query "HKLM\SYSTEM\CurrentControlSet\Services\UsoSvc" /v Start 2^>nul ^| findstr /i "Start"') do set "_reg_uso=%%a"
+    if "!_reg_uso!"=="0x4" (
+        echo     UsoSvc\Start:            DISABLED [OK]
+    ) else if "!_reg_uso!"=="0x2" (
+        echo     UsoSvc\Start:            AUTOMATIC [FAIL]
+        set "_cs_fail=!_cs_fail!  - UsoSvc\Start is 0x2 (Auto)^"
+    ) else if "!_reg_uso!"=="0x3" (
+        echo     UsoSvc\Start:            MANUAL [FAIL]
+        set "_cs_fail=!_cs_fail!  - UsoSvc\Start is 0x3 (Manual)^"
+    ) else (
+        echo     UsoSvc\Start:            !_reg_uso!
+    )
+)
+
+echo.
+echo   [3] GROUP POLICY STATUS
+echo.
+
+set "_gp_auto=Unknown"
+reg query "HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" /v NoAutoUpdate >nul 2>&1
+if errorlevel 1 (
+    echo     Auto Update Policy:      NOT CONFIGURED [FAIL]
+    set "_cs_fail=!_cs_fail!  - NoAutoUpdate policy not set^"
+) else (
+    for /f "tokens=3" %%a in ('reg query "HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" /v NoAutoUpdate 2^>nul ^| findstr /i "NoAutoUpdate"') do set "_gp_auto=%%a"
+    if "!_gp_auto!"=="0x1" (
+        echo     Auto Update Policy:      DISABLED [OK]
+    ) else (
+        echo     Auto Update Policy:      !_gp_auto! [FAIL]
+        set "_cs_fail=!_cs_fail!  - NoAutoUpdate is !_gp_auto! (should be 0x1)^"
+    )
+)
+
+echo.
+echo   [4] TASK SCHEDULER STATUS
+echo.
+
+:: Check if any update-related scheduled tasks are NOT disabled
+set "_active_tasks="
+for /f "delims=" %%t in ('powershell.exe -nop -c "Get-ScheduledTask -TaskPath '\Microsoft\Windows\WindowsUpdate\' -ErrorAction SilentlyContinue | Where-Object {$_.State -ne 'Disabled'} | Select-Object -ExpandProperty TaskName" 2^>nul') do (
+    set "_active_tasks=!_active_tasks! %%t"
+)
+if "!_active_tasks!"=="" (
+    echo     Update Tasks:            ALL DISABLED [OK]
+) else (
+    echo     Update Tasks:            NOT FULLY DISABLED [FAIL]
+    echo     Active tasks:!_active_tasks!
+    set "_cs_fail=!_cs_fail!  - Scheduled tasks still active:!_active_tasks!^"
+)
+
+echo.
+echo   ================================================================================
+echo.
+
+:: Summary
+set /a "_cs_fail_count=_cs_total - _cs_score"
+echo   RESULT: !_cs_score! / !_cs_total! PASSED, !_cs_fail_count! FAILED
+echo.
+if !_cs_score! EQU !_cs_total! (
+    echo     [FULLY DISABLED] Windows Update is completely disabled.
+    echo     No automatic updates will occur.
+) else (
+    echo     [NOT FULLY DISABLED] The following issues were found:
+    echo !_cs_fail!
+    echo.
+    echo     Recommend: Run option [1] One-Click Disable, then reboot.
+)
+
+echo.
+echo   ================================================================================
 echo.
 pause
 goto MainMenu
