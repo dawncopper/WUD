@@ -1,7 +1,7 @@
 @echo off
 :: ==============================================================================
 ::  Windows Update Disabler (WUD) - All-In-One Version
-::  Version 1.1
+::  Version 1.2
 ::
 ::  功能: 彻底关闭 Windows 自动更新
 ::  方法: 服务禁用 + 注册表修改 + 组策略配置 + 任务计划清理
@@ -12,15 +12,11 @@
 ::        irm https://raw.githubusercontent.com/Dawncopper/WUD/main/WUD.ps1 | iex
 :: ==============================================================================
 
-:: 设置 UTF-8 代码页以支持中文显示
-chcp 65001 >nul 2>&1
-
-:: 定义空设备变量（用于抑制输出）
-set "nul1=>nul"
-set "nul2=>nul 2>&1"
-
 :: 防止变量污染
 setlocal EnableDelayedExpansion
+
+:: 设置 UTF-8 代码页以支持中文显示
+chcp 65001 >nul 2>&1
 
 :: ==================== 初始化 ====================
 
@@ -38,7 +34,7 @@ if exist %SystemRoot%\Sysnative\cmd.exe if not defined re1 (
 )
 
 :: 管理员权限检测
-%nul1% fltmc || (
+fltmc >nul 2>&1 || (
     if not defined _elev (
         echo 正在请求管理员权限...
         powershell.exe -nop -c "start cmd.exe -arg '/c \"\"!_batf!\" -el\"' -verb runas"
@@ -67,7 +63,7 @@ set "_White=47;97m"
 set "_Cyan=46;97m"
 
 :: 版本号
-set "_ver=1.1"
+set "_ver=1.2"
 
 :: ==================== 主菜单 ====================
 
@@ -396,15 +392,15 @@ for %%s in (%_services%) do (
     sc query %%s >nul 2>&1 && (
         for /f "tokens=3" %%a in ('sc query %%s ^| findstr /i "STATE"') do (
             if "%%a"=="RUNNING" (
-                echo    %esc%[%_Red%    -> 正在运行，正在停止...%esc%[0m
+                echo    %esc%[%_Red%    - 正在运行，正在停止...%esc%[0m
                 net stop %%s >nul 2>&1
             )
         )
         echo    设置启动类型为禁用...
         sc config %%s start= disabled >nul 2>&1
-        echo    %esc%[%_Green%    -> 已禁用%esc%[0m
+        echo    %esc%[%_Green%    - 已禁用%esc%[0m
     ) || (
-        echo    %esc%[%_Gray%    -> 服务不存在，跳过%esc%[0m
+        echo    %esc%[%_Gray%    - 服务不存在，跳过%esc%[0m
     )
 )
 
