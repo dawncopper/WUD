@@ -38,7 +38,7 @@ fltmc >nul 2>&1 || (
     exit /b 1
 )
 
-mode con cols=80 lines=40
+mode con cols=82 lines=40
 
 set "_ver=1.5"
 
@@ -52,6 +52,7 @@ echo  ==========================================================================
 echo.
 echo            Windows Update Disabler  v%_ver%
 echo            Completely Disable Windows Automatic Updates
+echo            Em@il:5442710atQQ.com Wechat Blog:ilovefixpc
 echo.
 echo  ================================================================================
 echo.
