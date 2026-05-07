@@ -87,7 +87,8 @@ irm https://raw.githubusercontent.com/dawncopper/WUD/main/WUD.ps1 | iex
 MIT License - 自由使用、修改和分发。
 
 ## 🙏 致谢
-
+微信公众号 职场IT干货笔记 的文章提供灵感🙏
+[Windows自动更新彻底关闭教程：从服务到注册表，从组策略到任务计划，全覆盖！](https://mp.weixin.qq.com/s/Jmex2K6I6XT6qhMl9bIyGw)
 本项目架构参考了 [Microsoft-Activation-Scripts](https://github.com/massgravel/Microsoft-Activation-Scripts) 项目的设计模式。
 ## <img width="128" height="128" alt="微信图片_20260508013723_46_2" src="https://github.com/user-attachments/assets/ce8d934e-a3c1-46c2-a87c-b406f824ff4f" />
 扫码关注微信公众号:爱修电脑的童哥
