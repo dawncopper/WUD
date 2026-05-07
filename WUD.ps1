@@ -1,9 +1,9 @@
 # ==============================================================================
 #  Windows Update Disabler (WUD) - PowerShell Launcher
-#  Version 1.0
+#  Version 1.1
 #
 #  一键执行:
-#    irm https://raw.githubusercontent.com/YOUR_USERNAME/WUD/main/WUD.ps1 | iex
+#    irm https://raw.githubusercontent.com/Dawncopper/WUD/main/WUD.ps1 | iex
 #
 #  功能: 下载并执行 WUD.cmd 主脚本（自动提权）
 # ==============================================================================
@@ -14,6 +14,7 @@
 if ($ExecutionContext.SessionState.LanguageMode -ne 'FullLanguage') {
     Write-Warning "PowerShell is running in $($ExecutionContext.SessionState.LanguageMode) mode. This script requires FullLanguage mode."
     Write-Host "Please run: Set-ExecutionPolicy Bypass -Scope Process -Force"
+    Read-Host "Press Enter to exit"
     return
 }
 
@@ -24,6 +25,7 @@ try {
     if ($result -ne 12) { throw }
 } catch {
     Write-Warning ".NET runtime check failed. This script requires a working .NET environment."
+    Read-Host "Press Enter to exit"
     return
 }
 
@@ -32,7 +34,7 @@ try {
 
 # --- 下载主脚本 ---
 
-# 多源容错（请替换为你的实际 URL）
+# 多源容错
 $DownloadURLs = @(
     'https://raw.githubusercontent.com/Dawncopper/WUD/main/WUD.cmd',
     'https://cdn.jsdelivr.net/gh/Dawncopper/WUD@main/WUD.cmd',
@@ -61,6 +63,7 @@ if (-not $ScriptContent) {
     Write-Error "所有下载源均失败，请检查网络连接后重试。"
     Write-Host ""
     Write-Host "你也可以手动下载 WUD.cmd 并以管理员身份运行。" -ForegroundColor Yellow
+    Read-Host "Press Enter to exit"
     return
 }
 
@@ -79,11 +82,10 @@ try {
     Write-Host ""
 
     # 以管理员权限启动 CMD 执行脚本
-    $proc = Start-Process -FilePath $env:ComSpec -ArgumentList "/c `"$TempFile`" -el" -Wait -Verb RunAs -PassThru -ErrorAction Stop
+    # 使用 /k 而不是 /c，确保窗口不会在脚本结束后自动关闭
+    $proc = Start-Process -FilePath $env:ComSpec -ArgumentList "/k `"$TempFile`" -el" -Verb RunAs -PassThru -ErrorAction Stop
 
-} finally {
-    # 执行完毕后清理临时文件
-    if (Test-Path $TempFile) {
-        Remove-Item -Path $TempFile -Force -ErrorAction SilentlyContinue
-    }
+} catch {
+    Write-Error "启动脚本失败: $_"
+    Read-Host "Press Enter to exit"
 }
