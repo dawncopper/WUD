@@ -19,7 +19,7 @@
 打开 **PowerShell（管理员）**，复制粘贴以下命令：
 
 ```powershell
-irm https://raw.githubusercontent.com/YOUR_USERNAME/WUD/main/WUD.ps1 | iex
+irm https://raw.githubusercontent.com/dawncopper/WUD/main/WUD.ps1 | iex
 ```
 
 ## 📋 功能菜单
