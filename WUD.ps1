@@ -85,6 +85,9 @@ try {
     # 使用 /k 而不是 /c，确保窗口不会在脚本结束后自动关闭
     $proc = Start-Process -FilePath $env:ComSpec -ArgumentList "/k `"$TempFile`" -el" -Verb RunAs -PassThru -ErrorAction Stop
 
+    # CMD 已启动，关闭当前 PowerShell 窗口
+    exit
+
 } catch {
     Write-Error "启动脚本失败: $_"
     Read-Host "Press Enter to exit"
