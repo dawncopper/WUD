@@ -1,7 +1,7 @@
 @echo off
 :: ==============================================================================
 ::  Windows Update Disabler (WUD) - All-In-One Version
-::  Version 1.0
+::  Version 1.1
 ::
 ::  功能: 彻底关闭 Windows 自动更新
 ::  方法: 服务禁用 + 注册表修改 + 组策略配置 + 任务计划清理
@@ -9,8 +9,11 @@
 ::
 ::  用法: 以管理员身份运行此脚本
 ::        或通过 PowerShell 一键执行:
-::        irm https://raw.githubusercontent.com/YOUR_USERNAME/WUD/main/WUD.ps1 | iex
+::        irm https://raw.githubusercontent.com/Dawncopper/WUD/main/WUD.ps1 | iex
 :: ==============================================================================
+
+:: 设置 UTF-8 代码页以支持中文显示
+chcp 65001 >nul 2>&1
 
 :: 防止变量污染
 setlocal EnableDelayedExpansion
@@ -60,7 +63,7 @@ set "_White=47;97m"
 set "_Cyan=46;97m"
 
 :: 版本号
-set "_ver=1.0"
+set "_ver=1.1"
 
 :: ==================== 主菜单 ====================
 
@@ -68,12 +71,12 @@ set "_ver=1.0"
 cls
 title  Windows Update Disabler %_ver%
 echo.
-echo  %esc%[%_Cyan%═══════════════════════════════════════════════════════════════════════════════%esc%[0m
-echo  %esc%[%_Cyan%║%esc%[0m                                                                           %esc%[%_Cyan%║%esc%[0m
-echo  %esc%[%_Cyan%║%esc%[0m           %esc%[%_White% Windows Update Disabler  v%_ver% %esc%[0m                          %esc%[%_Cyan%║%esc%[0m
-echo  %esc%[%_Cyan%║%esc%[0m           %esc%[%_Gray% 彻底关闭 Windows 自动更新工具 %esc%[0m                        %esc%[%_Cyan%║%esc%[0m
-echo  %esc%[%_Cyan%║%esc%[0m                                                                           %esc%[%_Cyan%║%esc%[0m
-echo  %esc%[%_Cyan%═══════════════════════════════════════════════════════════════════════════════%esc%[0m
+echo  %esc%[%_Cyan%================================================================================%esc%[0m
+echo  %esc%[%_Cyan%|%esc%[0m                                                                           %esc%[%_Cyan%|%esc%[0m
+echo  %esc%[%_Cyan%|%esc%[0m           %esc%[%_White% Windows Update Disabler  v%_ver% %esc%[0m                          %esc%[%_Cyan%|%esc%[0m
+echo  %esc%[%_Cyan%|%esc%[0m           %esc%[%_Gray% 彻底关闭 Windows 自动更新工具 %esc%[0m                        %esc%[%_Cyan%|%esc%[0m
+echo  %esc%[%_Cyan%|%esc%[0m                                                                           %esc%[%_Cyan%|%esc%[0m
+echo  %esc%[%_Cyan%================================================================================%esc%[0m
 echo.
 echo  %esc%[%_White%  操作菜单:%esc%[0m
 echo.
@@ -88,7 +91,7 @@ echo     %esc%[%_Green%[8]%esc%[0m  修复：更新服务复活问题
 echo.
 echo     %esc%[%_Red%[0]%esc%[0m  退出
 echo.
-echo  %esc%[%_Cyan%═══════════════════════════════════════════════════════════════════════════════%esc%[0m
+echo  %esc%[%_Cyan%================================================================================%esc%[0m
 echo.
 echo  %esc%[%_Gray%  提示: 安全更新也会被禁用，建议定期手动检查安全补丁。%esc%[0m
 echo.
@@ -113,7 +116,7 @@ goto MainMenu
 cls
 echo.
 echo  %esc%[%_Yellow%  正在执行一键彻底关闭 Windows 更新...%esc%[0m
-echo  %esc%[%_Gray%  ─────────────────────────────────────────────────────────────────%esc%[0m
+echo  %esc%[%_Gray%  ----------------------------------------------------------------%esc%[0m
 echo.
 
 echo  %esc%[%_Cyan%  [1/4] 禁用更新服务...%esc%[0m
@@ -132,11 +135,11 @@ echo  %esc%[%_Cyan%  [4/4] 清理任务计划...%esc%[0m
 call :CleanTaskSchedule
 echo.
 
-echo  %esc%[%_Gray%  ─────────────────────────────────────────────────────────────────%esc%[0m
+echo  %esc%[%_Gray%  ----------------------------------------------------------------%esc%[0m
 echo.
-echo  %esc%[%_Green%  ✓ 所有操作已完成！Windows 更新已被彻底关闭。%esc%[0m
+echo  %esc%[%_Green%  [OK] 所有操作已完成！Windows 更新已被彻底关闭。%esc%[0m
 echo.
-echo  %esc%[%_Yellow%  ⚠ 注意: 安全更新也已停止，建议每月手动检查一次安全补丁。%esc%[0m
+echo  %esc%[%_Yellow%  [!] 注意: 安全更新也已停止，建议每月手动检查一次安全补丁。%esc%[0m
 echo.
 pause
 goto MainMenu
@@ -146,9 +149,9 @@ goto MainMenu
 :StepByStep
 cls
 echo.
-echo  %esc%[%_Cyan%═══════════════════════════════════════════════════════════════════%esc%[0m
-echo  %esc%[%_Cyan%║%esc%[0m           %esc%[%_White% 分步执行 - 高级用户模式 %esc%[0m                          %esc%[%_Cyan%║%esc%[0m
-echo  %esc%[%_Cyan%═══════════════════════════════════════════════════════════════════%esc%[0m
+echo  %esc%[%_Cyan%===================================================================%esc%[0m
+echo  %esc%[%_Cyan%|%esc%[0m           %esc%[%_White% 分步执行 - 高级用户模式 %esc%[0m                          %esc%[%_Cyan%|%esc%[0m
+echo  %esc%[%_Cyan%===================================================================%esc%[0m
 echo.
 echo     %esc%[%_Green%[1]%esc%[0m  第一步: 禁用 Windows Update 服务
 echo     %esc%[%_Green%[2]%esc%[0m  第二步: 修改注册表（堵死复活机制）
@@ -203,7 +206,7 @@ goto StepByStep
 cls
 echo.
 echo  %esc%[%_Yellow%  正在恢复 Windows 更新...%esc%[0m
-echo  %esc%[%_Gray%  ─────────────────────────────────────────────────────────────────%esc%[0m
+echo  %esc%[%_Gray%  ----------------------------------------------------------------%esc%[0m
 echo.
 
 echo  %esc%[%_Cyan%  [1/4] 恢复更新服务...%esc%[0m
@@ -222,9 +225,9 @@ echo  %esc%[%_Cyan%  [4/4] 恢复任务计划...%esc%[0m
 call :RestoreTaskSchedule
 echo.
 
-echo  %esc%[%_Gray%  ─────────────────────────────────────────────────────────────────%esc%[0m
+echo  %esc%[%_Gray%  ----------------------------------------------------------------%esc%[0m
 echo.
-echo  %esc%[%_Green%  ✓ Windows 更新已恢复！%esc%[0m
+echo  %esc%[%_Green%  [OK] Windows 更新已恢复！%esc%[0m
 echo  %esc%[%_Yellow%  建议重启电脑以确保所有更改生效。%esc%[0m
 echo.
 pause
@@ -236,18 +239,18 @@ goto MainMenu
 cls
 echo.
 echo  %esc%[%_Cyan%  当前 Windows 更新状态检查%esc%[0m
-echo  %esc%[%_Gray%  ─────────────────────────────────────────────────────────────────%esc%[0m
+echo  %esc%[%_Gray%  ----------------------------------------------------------------%esc%[0m
 echo.
 
 :: 检查 Windows Update 服务状态
 echo  %esc%[%_White%  [服务状态]%esc%[0m
 for /f "tokens=3" %%a in ('sc query wuauserv ^| findstr /i "STATE"') do (
     if "%%a"=="RUNNING" (
-        echo    Windows Update 服务:    %esc%[%_Green%● 运行中%esc%[0m
+        echo    Windows Update 服务:    %esc%[%_Green%[运行中]%esc%[0m
     ) else if "%%a"=="STOPPED" (
-        echo    Windows Update 服务:    %esc%[%_Yellow%● 已停止%esc%[0m
+        echo    Windows Update 服务:    %esc%[%_Yellow%[已停止]%esc%[0m
     ) else (
-        echo    Windows Update 服务:    %esc%[%_Red%● %%a%esc%[0m
+        echo    Windows Update 服务:    %esc%[%_Red%[%%a]%esc%[0m
     )
 )
 
@@ -259,11 +262,11 @@ for /f "tokens=3" %%a in ('sc query wuauserv ^| findstr /i "START_TYPE" 2^>nul')
 echo.
 for /f "tokens=3" %%a in ('sc query UsoSvc ^| findstr /i "STATE" 2^>nul') do (
     if "%%a"=="RUNNING" (
-        echo    UsoSvc 服务:          %esc%[%_Green%● 运行中%esc%[0m
+        echo    UsoSvc 服务:          %esc%[%_Green%[运行中]%esc%[0m
     ) else if "%%a"=="STOPPED" (
-        echo    UsoSvc 服务:          %esc%[%_Yellow%● 已停止%esc%[0m
+        echo    UsoSvc 服务:          %esc%[%_Yellow%[已停止]%esc%[0m
     ) else (
-        echo    UsoSvc 服务:          %esc%[%_Red%● %%a%esc%[0m
+        echo    UsoSvc 服务:          %esc%[%_Red%[%%a]%esc%[0m
     )
 )
 
@@ -321,7 +324,7 @@ if "%_taskCount%"=="0" (
 )
 
 echo.
-echo  %esc%[%_Gray%  ─────────────────────────────────────────────────────────────────%esc%[0m
+echo  %esc%[%_Gray%  ----------------------------------------------------------------%esc%[0m
 echo.
 pause
 goto MainMenu
@@ -337,7 +340,7 @@ call :DisableWUService
 echo.
 call :ModifyRegistry
 echo.
-echo  %esc%[%_Green%  ✓ 服务和注册表配置完成！%esc%[0m
+echo  %esc%[%_Green%  [OK] 服务和注册表配置完成！%esc%[0m
 echo.
 pause
 goto MainMenu
@@ -351,7 +354,7 @@ echo  %esc%[%_Yellow%  正在配置组策略...%esc%[0m
 echo.
 call :ConfigureGroupPolicy
 echo.
-echo  %esc%[%_Green%  ✓ 组策略配置完成！%esc%[0m
+echo  %esc%[%_Green%  [OK] 组策略配置完成！%esc%[0m
 echo  %esc%[%_Yellow%  注意: 组策略仅对 Windows Pro/Enterprise 版本有效。%esc%[0m
 echo.
 pause
@@ -366,7 +369,7 @@ echo  %esc%[%_Yellow%  正在清理任务计划...%esc%[0m
 echo.
 call :CleanTaskSchedule
 echo.
-echo  %esc%[%_Green%  ✓ 任务计划清理完成！%esc%[0m
+echo  %esc%[%_Green%  [OK] 任务计划清理完成！%esc%[0m
 echo.
 pause
 goto MainMenu
@@ -377,7 +380,7 @@ goto MainMenu
 cls
 echo.
 echo  %esc%[%_Yellow%  正在修复更新服务复活问题...%esc%[0m
-echo  %esc%[%_Gray%  ─────────────────────────────────────────────────────────────────%esc%[0m
+echo  %esc%[%_Gray%  ----------------------------------------------------------------%esc%[0m
 echo.
 echo  %esc%[%_Cyan%  诊断中...%esc%[0m
 echo.
@@ -389,15 +392,15 @@ for %%s in (%_services%) do (
     sc query %%s >nul 2>&1 && (
         for /f "tokens=3" %%a in ('sc query %%s ^| findstr /i "STATE"') do (
             if "%%a"=="RUNNING" (
-                echo    %esc%[%_Red%    → 正在运行，正在停止...%esc%[0m
+                echo    %esc%[%_Red%    -> 正在运行，正在停止...%esc%[0m
                 net stop %%s >nul 2>&1
             )
         )
         echo    设置启动类型为禁用...
         sc config %%s start= disabled >nul 2>&1
-        echo    %esc%[%_Green%    → 已禁用%esc%[0m
+        echo    %esc%[%_Green%    -> 已禁用%esc%[0m
     ) || (
-        echo    %esc%[%_Gray%    → 服务不存在，跳过%esc%[0m
+        echo    %esc%[%_Gray%    -> 服务不存在，跳过%esc%[0m
     )
 )
 
@@ -409,13 +412,13 @@ echo.
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\wuauserv" /v Start /t REG_DWORD /d 4 /f >nul 2>&1
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\UsoSvc" /v Start /t REG_DWORD /d 4 /f >nul 2>&1
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\WaaSMedicSvc" /v Start /t REG_DWORD /d 4 /f >nul 2>&1
-echo  %esc%[%_Green%  ✓ 服务启动类型已设为禁用%esc%[0m
+echo  %esc%[%_Green%  [OK] 服务启动类型已设为禁用%esc%[0m
 
 :: 修复 FailureActions 二进制数据
 echo  修复 FailureActions...
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\UsoSvc" /v FailureActions /t REG_BINARY /d 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 /f >nul 2>&1
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\wuauserv" /v FailureActions /t REG_BINARY /d 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 /f >nul 2>&1
-echo  %esc%[%_Green%  ✓ FailureActions 已重置（禁用自动恢复）%esc%[0m
+echo  %esc%[%_Green%  [OK] FailureActions 已重置（禁用自动恢复）%esc%[0m
 
 echo.
 echo  %esc%[%_Cyan%  清理任务计划...%esc%[0m
@@ -423,9 +426,9 @@ echo.
 call :CleanTaskSchedule
 
 echo.
-echo  %esc%[%_Gray%  ─────────────────────────────────────────────────────────────────%esc%[0m
+echo  %esc%[%_Gray%  ----------------------------------------------------------------%esc%[0m
 echo.
-echo  %esc%[%_Green%  ✓ 修复完成！更新服务不会再自动复活。%esc%[0m
+echo  %esc%[%_Green%  [OK] 修复完成！更新服务不会再自动复活。%esc%[0m
 echo  %esc%[%_Yellow%  建议重启电脑以确保所有更改生效。%esc%[0m
 echo.
 pause
@@ -438,59 +441,59 @@ goto MainMenu
 echo  停止 Windows Update 服务...
 net stop wuauserv >nul 2>&1
 sc config wuauserv start= disabled >nul 2>&1
-echo  %esc%[%_Green%    ✓ Windows Update 服务已禁用%esc%[0m
+echo  %esc%[%_Green%    [OK] Windows Update 服务已禁用%esc%[0m
 
 echo  停止 UsoSvc 服务...
 net stop UsoSvc >nul 2>&1
 sc config UsoSvc start= disabled >nul 2>&1
-echo  %esc%[%_Green%    ✓ UsoSvc 服务已禁用%esc%[0m
+echo  %esc%[%_Green%    [OK] UsoSvc 服务已禁用%esc%[0m
 
 echo  停止 Windows Update Medic Service...
 net stop WaaSMedicSvc >nul 2>&1
 sc config WaaSMedicSvc start= disabled >nul 2>&1
-echo  %esc%[%_Green%    ✓ Windows Update Medic Service 已禁用%esc%[0m
+echo  %esc%[%_Green%    [OK] Windows Update Medic Service 已禁用%esc%[0m
 
 echo  停止 Update Orchestrator Service...
 net stop UsoClient >nul 2>&1
 sc config UsoClient start= disabled >nul 2>&1
-echo  %esc%[%_Green%    ✓ Update Orchestrator Service 已禁用%esc%[0m
+echo  %esc%[%_Green%    [OK] Update Orchestrator Service 已禁用%esc%[0m
 
 echo  设置恢复选项为"无操作"...
 sc failure wuauserv reset= 0 actions= // >nul 2>&1
 sc failure UsoSvc reset= 0 actions= // >nul 2>&1
 sc failure WaaSMedicSvc reset= 0 actions= // >nul 2>&1
-echo  %esc%[%_Green%    ✓ 所有服务的恢复操作已设为"无操作"%esc%[0m
+echo  %esc%[%_Green%    [OK] 所有服务的恢复操作已设为"无操作"%esc%[0m
 goto :eof
 
 :: ---------- 修改注册表 ----------
 :ModifyRegistry
 echo  修改 wuauserv\Start 为 4（禁用）...
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\wuauserv" /v Start /t REG_DWORD /d 4 /f >nul 2>&1
-echo  %esc%[%_Green%    ✓ wuauserv\Start = 4%esc%[0m
+echo  %esc%[%_Green%    [OK] wuauserv\Start = 4%esc%[0m
 
 echo  修改 UsoSvc\Start 为 4（禁用）...
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\UsoSvc" /v Start /t REG_DWORD /d 4 /f >nul 2>&1
-echo  %esc%[%_Green%    ✓ UsoSvc\Start = 4%esc%[0m
+echo  %esc%[%_Green%    [OK] UsoSvc\Start = 4%esc%[0m
 
 echo  修改 WaaSMedicSvc\Start 为 4（禁用）...
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\WaaSMedicSvc" /v Start /t REG_DWORD /d 4 /f >nul 2>&1
-echo  %esc%[%_Green%    ✓ WaaSMedicSvc\Start = 4%esc%[0m
+echo  %esc%[%_Green%    [OK] WaaSMedicSvc\Start = 4%esc%[0m
 
 echo  修改 UsoClient\Start 为 4（禁用）...
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\UsoClient" /v Start /t REG_DWORD /d 4 /f >nul 2>&1
-echo  %esc%[%_Green%    ✓ UsoClient\Start = 4%esc%[0m
+echo  %esc%[%_Green%    [OK] UsoClient\Start = 4%esc%[0m
 
 echo  重置 UsoSvc\FailureActions（禁用自动恢复）...
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\UsoSvc" /v FailureActions /t REG_BINARY /d 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 /f >nul 2>&1
-echo  %esc%[%_Green%    ✓ UsoSvc\FailureActions 已重置%esc%[0m
+echo  %esc%[%_Green%    [OK] UsoSvc\FailureActions 已重置%esc%[0m
 
 echo  重置 wuauserv\FailureActions（禁用自动恢复）...
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\wuauserv" /v FailureActions /t REG_BINARY /d 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 /f >nul 2>&1
-echo  %esc%[%_Green%    ✓ wuauserv\FailureActions 已重置%esc%[0m
+echo  %esc%[%_Green%    [OK] wuauserv\FailureActions 已重置%esc%[0m
 
 echo  禁用 Windows Update Delivery Optimization...
 reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\DeliveryOptimization" /v DODownloadMode /t REG_DWORD /d 0 /f >nul 2>&1
-echo  %esc%[%_Green%    ✓ 传递优化已禁用%esc%[0m
+echo  %esc%[%_Green%    [OK] 传递优化已禁用%esc%[0m
 goto :eof
 
 :: ---------- 配置组策略 ----------
@@ -501,23 +504,23 @@ reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" /f >nul 2>&1
 
 echo  禁用自动更新（NoAutoUpdate = 1）...
 reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" /v NoAutoUpdate /t REG_DWORD /d 1 /f >nul 2>&1
-echo  %esc%[%_Green%    ✓ 自动更新已禁用%esc%[0m
+echo  %esc%[%_Green%    [OK] 自动更新已禁用%esc%[0m
 
 echo  设置自动更新通知为"已禁用"（AUOptions = 1）...
 reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" /v AUOptions /t REG_DWORD /d 1 /f >nul 2>&1
-echo  %esc%[%_Green%    ✓ 更新通知已禁用%esc%[0m
+echo  %esc%[%_Green%    [OK] 更新通知已禁用%esc%[0m
 
 echo  禁用 Windows Update 功能访问...
 reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate" /v DisableWindowsUpdateAccess /t REG_DWORD /d 1 /f >nul 2>&1
-echo  %esc%[%_Green%    ✓ Windows Update 功能访问已禁用%esc%[0m
+echo  %esc%[%_Green%    [OK] Windows Update 功能访问已禁用%esc%[0m
 
 echo  禁用"重启以更新"提示...
 reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" /v NoAutoRebootWithLoggedOnUsers /t REG_DWORD /d 1 /f >nul 2>&1
-echo  %esc%[%_Green%    ✓ "重启以更新"提示已禁用%esc%[0m
+echo  %esc%[%_Green%    [OK] "重启以更新"提示已禁用%esc%[0m
 
 echo  禁用更新范围检测...
 reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" /v UseWUServer /t REG_DWORD /d 1 /f >nul 2>&1
-echo  %esc%[%_Green%    ✓ 已配置使用内部 WSUS（阻止微软更新服务器）%esc%[0m
+echo  %esc%[%_Green%    [OK] 已配置使用内部 WSUS（阻止微软更新服务器）%esc%[0m
 goto :eof
 
 :: ---------- 清理任务计划 ----------
@@ -541,7 +544,7 @@ echo  正在禁用 WindowsUpdate 相关任务计划...
 set "_taskList=Scheduled Start"
 for %%t in (%_taskList%) do (
     schtasks /change /tn "Microsoft\Windows\WindowsUpdate\%%t" /disable >nul 2>&1 && (
-        echo  %esc%[%_Green%    ✓ 已禁用: %%t%esc%[0m
+        echo  %esc%[%_Green%    [OK] 已禁用: %%t%esc%[0m
         set /a "_disabled+=1"
     ) || (
         echo  %esc%[%_Gray%    - 不存在: %%t%esc%[0m
@@ -549,9 +552,9 @@ for %%t in (%_taskList%) do (
 )
 
 :: 使用 PowerShell 获取并禁用所有 WindowsUpdate 任务
-powershell.exe -nop -c "Get-ScheduledTask -TaskPath '\Microsoft\Windows\WindowsUpdate\' -ErrorAction SilentlyContinue | ForEach-Object { Disable-ScheduledTask -TaskName $_.TaskName -TaskPath $_.TaskPath -ErrorAction SilentlyContinue; Write-Host ('    ✓ 已禁用: ' + $_.TaskName) }" 2>nul
+powershell.exe -nop -c "Get-ScheduledTask -TaskPath '\Microsoft\Windows\WindowsUpdate\' -ErrorAction SilentlyContinue | ForEach-Object { Disable-ScheduledTask -TaskName $_.TaskName -TaskPath $_.TaskPath -ErrorAction SilentlyContinue; Write-Host ('    [OK] 已禁用: ' + $_.TaskName) }" 2>nul
 
-echo  %esc%[%_Green%  ✓ WindowsUpdate 任务计划已全部禁用。%esc%[0m
+echo  %esc%[%_Green%  [OK] WindowsUpdate 任务计划已全部禁用。%esc%[0m
 goto :eof
 
 :: ---------- 恢复服务 ----------
@@ -559,44 +562,44 @@ goto :eof
 echo  恢复 Windows Update 服务...
 sc config wuauserv start= demand >nul 2>&1
 sc failure wuauserv reset= 86400 actions= restart/60000/restart/120000/restart/14400000 >nul 2>&1
-echo  %esc%[%_Green%    ✓ Windows Update 服务已恢复%esc%[0m
+echo  %esc%[%_Green%    [OK] Windows Update 服务已恢复%esc%[0m
 
 echo  恢复 UsoSvc 服务...
 sc config UsoSvc start= demand >nul 2>&1
 sc failure UsoSvc reset= 86400 actions= restart/60000/restart/120000/restart/14400000 >nul 2>&1
-echo  %esc%[%_Green%    ✓ UsoSvc 服务已恢复%esc%[0m
+echo  %esc%[%_Green%    [OK] UsoSvc 服务已恢复%esc%[0m
 
 echo  恢复 Windows Update Medic Service...
 sc config WaaSMedicSvc start= demand >nul 2>&1
-echo  %esc%[%_Green%    ✓ Windows Update Medic Service 已恢复%esc%[0m
+echo  %esc%[%_Green%    [OK] Windows Update Medic Service 已恢复%esc%[0m
 
 echo  恢复 Update Orchestrator Service...
 sc config UsoClient start= demand >nul 2>&1
-echo  %esc%[%_Green%    ✓ Update Orchestrator Service 已恢复%esc%[0m
+echo  %esc%[%_Green%    [OK] Update Orchestrator Service 已恢复%esc%[0m
 goto :eof
 
 :: ---------- 恢复注册表 ----------
 :RestoreRegistry
 echo  恢复 wuauserv\Start 为 3（手动）...
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\wuauserv" /v Start /t REG_DWORD /d 3 /f >nul 2>&1
-echo  %esc%[%_Green%    ✓ wuauserv\Start = 3%esc%[0m
+echo  %esc%[%_Green%    [OK] wuauserv\Start = 3%esc%[0m
 
 echo  恢复 UsoSvc\Start 为 3（手动）...
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\UsoSvc" /v Start /t REG_DWORD /d 3 /f >nul 2>&1
-echo  %esc%[%_Green%    ✓ UsoSvc\Start = 3%esc%[0m
+echo  %esc%[%_Green%    [OK] UsoSvc\Start = 3%esc%[0m
 
 echo  恢复 WaaSMedicSvc\Start 为 3（手动）...
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\WaaSMedicSvc" /v Start /t REG_DWORD /d 3 /f >nul 2>&1
-echo  %esc%[%_Green%    ✓ WaaSMedicSvc\Start = 3%esc%[0m
+echo  %esc%[%_Green%    [OK] WaaSMedicSvc\Start = 3%esc%[0m
 
 echo  恢复 UsoClient\Start 为 3（手动）...
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\UsoClient" /v Start /t REG_DWORD /d 3 /f >nul 2>&1
-echo  %esc%[%_Green%    ✓ UsoClient\Start = 3%esc%[0m
+echo  %esc%[%_Green%    [OK] UsoClient\Start = 3%esc%[0m
 
 echo  删除自定义 FailureActions（恢复默认）...
 reg delete "HKLM\SYSTEM\CurrentControlSet\Services\UsoSvc" /v FailureActions /f >nul 2>&1
 reg delete "HKLM\SYSTEM\CurrentControlSet\Services\wuauserv" /v FailureActions /f >nul 2>&1
-echo  %esc%[%_Green%    ✓ FailureActions 已恢复默认%esc%[0m
+echo  %esc%[%_Green%    [OK] FailureActions 已恢复默认%esc%[0m
 goto :eof
 
 :: ---------- 恢复组策略 ----------
@@ -604,14 +607,14 @@ goto :eof
 echo  删除 Windows Update 组策略...
 reg delete "HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" /f >nul 2>&1
 reg delete "HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate" /v DisableWindowsUpdateAccess /f >nul 2>&1
-echo  %esc%[%_Green%    ✓ 组策略已恢复默认%esc%[0m
+echo  %esc%[%_Green%    [OK] 组策略已恢复默认%esc%[0m
 goto :eof
 
 :: ---------- 恢复任务计划 ----------
 :RestoreTaskSchedule
 echo  启用 WindowsUpdate 任务计划...
-powershell.exe -nop -c "Get-ScheduledTask -TaskPath '\Microsoft\Windows\WindowsUpdate\' -ErrorAction SilentlyContinue | ForEach-Object { Enable-ScheduledTask -TaskName $_.TaskName -TaskPath $_.TaskPath -ErrorAction SilentlyContinue; Write-Host ('    ✓ 已启用: ' + $_.TaskName) }" 2>nul
-echo  %esc%[%_Green%  ✓ 任务计划已恢复。%esc%[0m
+powershell.exe -nop -c "Get-ScheduledTask -TaskPath '\Microsoft\Windows\WindowsUpdate\' -ErrorAction SilentlyContinue | ForEach-Object { Enable-ScheduledTask -TaskName $_.TaskName -TaskPath $_.TaskPath -ErrorAction SilentlyContinue; Write-Host ('    [OK] 已启用: ' + $_.TaskName) }" 2>nul
+echo  %esc%[%_Green%  [OK] 任务计划已恢复。%esc%[0m
 goto :eof
 
 :: ==================== 退出 ====================
