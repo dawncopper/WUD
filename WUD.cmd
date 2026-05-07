@@ -1,7 +1,7 @@
 @echo off
 :: ==============================================================================
 ::  Windows Update Disabler (WUD) - All-In-One Version
-::  Version 1.2
+::  Version 1.3
 ::
 ::  功能: 彻底关闭 Windows 自动更新
 ::  方法: 服务禁用 + 注册表修改 + 组策略配置 + 任务计划清理
@@ -48,10 +48,9 @@ fltmc >nul 2>&1 || (
 :: 禁用 QuickEdit 防止误触暂停
 mode con cols=80 lines=40
 
-:: ANSI 颜色支持检测
-for /f %%a in ('echo prompt $E ^| cmd') do set "esc=%%a"
-set "_NCS=1"
-if not defined esc set "_NCS=0"
+:: ANSI 转义字符 - 使用 findstr 安全检测
+for /F "delims=#" %%E in ('"prompt #$E# & for %%E in (1) do rem"') do set "esc=%%E"
+if not defined esc set "esc="
 
 :: 颜色定义
 set "_Red=41;97m"
@@ -63,7 +62,7 @@ set "_White=47;97m"
 set "_Cyan=46;97m"
 
 :: 版本号
-set "_ver=1.2"
+set "_ver=1.3"
 
 :: ==================== 主菜单 ====================
 
@@ -242,7 +241,6 @@ echo  %esc%[%_Cyan%  当前 Windows 更新状态检查%esc%[0m
 echo  %esc%[%_Gray%  ----------------------------------------------------------------%esc%[0m
 echo.
 
-:: 检查 Windows Update 服务状态
 echo  %esc%[%_White%  [服务状态]%esc%[0m
 for /f "tokens=3" %%a in ('sc query wuauserv ^| findstr /i "STATE"') do (
     if "%%a"=="RUNNING" (
@@ -258,7 +256,6 @@ for /f "tokens=3" %%a in ('sc query wuauserv ^| findstr /i "START_TYPE" 2^>nul')
     echo    启动类型:              %%a
 )
 
-:: 检查 UsoSvc 服务
 echo.
 for /f "tokens=3" %%a in ('sc query UsoSvc ^| findstr /i "STATE" 2^>nul') do (
     if "%%a"=="RUNNING" (
@@ -270,7 +267,6 @@ for /f "tokens=3" %%a in ('sc query UsoSvc ^| findstr /i "STATE" 2^>nul') do (
     )
 )
 
-:: 检查注册表
 echo.
 echo  %esc%[%_White%  [注册表状态]%esc%[0m
 reg query "HKLM\SYSTEM\CurrentControlSet\Services\wuauserv" /v Start 2>nul | findstr /i "Start" >nul && (
@@ -299,7 +295,6 @@ reg query "HKLM\SYSTEM\CurrentControlSet\Services\UsoSvc" /v Start 2>nul | finds
     )
 ) || echo    UsoSvc\Start:        %esc%[%_Red%未找到%esc%[0m
 
-:: 检查组策略
 echo.
 echo  %esc%[%_White%  [组策略状态]%esc%[0m
 reg query "HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" /v NoAutoUpdate 2>nul | findstr /i "NoAutoUpdate" >nul && (
@@ -312,7 +307,6 @@ reg query "HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" /v NoAutoU
     )
 ) || echo    自动更新策略:        %esc%[%_Yellow%未配置%esc%[0m
 
-:: 检查任务计划
 echo.
 echo  %esc%[%_White%  [任务计划状态]%esc%[0m
 set "_taskCount=0"
@@ -385,7 +379,6 @@ echo.
 echo  %esc%[%_Cyan%  诊断中...%esc%[0m
 echo.
 
-:: 检查并修复所有相关服务
 set "_services=wuauserv UsoSvc WaaSMedicSvc UsoClient bits cryptsvc"
 for %%s in (%_services%) do (
     echo  检查服务: %%s
@@ -408,13 +401,11 @@ echo.
 echo  %esc%[%_Cyan%  修复注册表恢复机制...%esc%[0m
 echo.
 
-:: 修复 FailureActions
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\wuauserv" /v Start /t REG_DWORD /d 4 /f >nul 2>&1
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\UsoSvc" /v Start /t REG_DWORD /d 4 /f >nul 2>&1
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\WaaSMedicSvc" /v Start /t REG_DWORD /d 4 /f >nul 2>&1
 echo  %esc%[%_Green%  [OK] 服务启动类型已设为禁用%esc%[0m
 
-:: 修复 FailureActions 二进制数据
 echo  修复 FailureActions...
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\UsoSvc" /v FailureActions /t REG_BINARY /d 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 /f >nul 2>&1
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\wuauserv" /v FailureActions /t REG_BINARY /d 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 /f >nul 2>&1
@@ -528,7 +519,6 @@ goto :eof
 set "_wutasks=0"
 set "_disabled=0"
 
-:: 列出并禁用所有 WindowsUpdate 相关任务
 for /f "delims=" %%t in ('schtasks /query /tn "Microsoft\Windows\WindowsUpdate" /fo LIST 2^>nul ^| findstr /i "TaskName"') do (
     set "_wutasks=1"
 )
@@ -540,7 +530,6 @@ if "%_wutasks%"=="0" (
 
 echo  正在禁用 WindowsUpdate 相关任务计划...
 
-:: 已知的 Windows Update 任务计划列表
 set "_taskList=Scheduled Start"
 for %%t in (%_taskList%) do (
     schtasks /change /tn "Microsoft\Windows\WindowsUpdate\%%t" /disable >nul 2>&1 && (
@@ -551,7 +540,6 @@ for %%t in (%_taskList%) do (
     )
 )
 
-:: 使用 PowerShell 获取并禁用所有 WindowsUpdate 任务
 powershell.exe -nop -c "Get-ScheduledTask -TaskPath '\Microsoft\Windows\WindowsUpdate\' -ErrorAction SilentlyContinue | ForEach-Object { Disable-ScheduledTask -TaskName $_.TaskName -TaskPath $_.TaskPath -ErrorAction SilentlyContinue; Write-Host ('    [OK] 已禁用: ' + $_.TaskName) }" 2>nul
 
 echo  %esc%[%_Green%  [OK] WindowsUpdate 任务计划已全部禁用。%esc%[0m
